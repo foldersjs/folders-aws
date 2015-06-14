@@ -1,5 +1,6 @@
 // Folders.io connector to AWS
-var request = require('aws-sdk');
+var AWS = require('aws-sdk');
+var path = require('path');
 
 
 /*
@@ -8,65 +9,62 @@ var request = require('aws-sdk');
  * export AWS_SECRET_ACCESS_KEY='SECRET'
  */
 
-// Be wary of region. Keep in mind many services support "S3" endpoint semantics outside of AWS.
-AWS.config.region = 'us-west-2';
 
 
+var FoldersAws = function (prefix, options) {
 
-var baseurl;
-//TODO we may want to pass the host, port, username as the param of inin
-var FoldersAws = function(prefix, options) {
-        this.prefix = prefix;
+    this.configure(options);
+    this.prefix = prefix || "/http_window.io_0:aws/";
+    console.log("inin foldersAws,", this.bucket);
 
-        baseurl = options.baseurl;
-        if (baseurl.length && baseurl.substr(-1) != "/")
-                baseurl = baseurl + "/";
-        this.username = options.username;
-        console.log("inin foldersAws,", baseurl, this.username);
 };
 
-
-
-var s3 = new AWS.S3();
-s3.listBuckets(function(err, data) {
-  if (err) { console.log("Error:", err); }
-  else {
-    for (var index in data.Buckets) {
-      var bucket = data.Buckets[index];
-      console.log("Bucket: ", bucket.Name, ' : ', bucket.CreationDate);
+FoldersAws.prototype.configure = function (options) {
+    var self = this;
+    /*
+     * load credentials from disk file 
+     */
+    if (options.credentialsFilePath) {
+        AWS.config.loadFromPath(options.credentialsFilePath);
     }
-  }
-});
+    /*
+     * hard-code credentials inside an application. 
+     * Use this method only for small personal 
+     * scripts or for testing purposes.
+     */
+    else if (options.accessKeyId && options.secretAccessKey) {
+        AWS.config.update({
+            accessKeyId: options.accessKeyId,
+            secretAccessKey: options.secretAccessKey
+        });
+    }
 
 
-var write = function(uri, stream, cb) {
-        var s3obj = new AWS.S3({params: {Bucket: 'myBucket', Key: 'myKey'}});
-        s3obj.upload({Body: stream}).
-                on('httpUploadProgress', function(evt) { console.log(evt); }).
-                send(function(error, response) {
-                        if (error) {
-                                console.error(error);
-                                return cb(null, error);
-                        }
-                        return cb("created success");
-                });
+    if (typeof options.service == 'string') {
+        self.singleService = true;
+        self.service = options.service;
+    } else if (options.service instanceof Array) {
+        self.multipleService = true;
+    } else if (!options.service) {
+        self.allService = true;
+    }
+
+    if (typeof options.region == 'string') {
+        self.singleRegion = true;
+        self.region = options.region;
+    } else if (options.region instanceof Array) {
+        self.multipleRegion = true;
+    } else if (!options.region) {
+        self.allRegion = true;
+    }
+
+    self.updateRegion(options.region);
+    self.bucket = options.bucket;
+
 };
 
 
-var cat = function(path, cb) {
-        var s3 = new AWS.S3();
-        var params = {Bucket: 'myBucket', Key: 'myImageFile.jpg'};
-        var file = require('fs').createWriteStream('/path/to/file.jpg');
-        // FIXME: See if we can get some info on the remote file, esp. length.
-// headObject / listObjects  works well enough usually.
-        var body = s3.getObject(params).createReadStream();
-        cb({
-                stream : body,
-                size : fileStatus.length,
-                name : fileStatus.pathSuffix
-        });
-}
-
+/*
 var getUri = function(path, cb) {
         var s3 = new AWS.S3();
         var params = {Bucket: 'myBucket', Key: 'myKey'};
@@ -79,74 +77,147 @@ var params = {Bucket: 'myBucket', Key: 'myKey'};
 var url = s3.getSignedUrl('putObject', params);
 
 }
+*/
 
 module.exports = FoldersAws;
 
-FoldersAws.prototype.ls = function(path,cb){
-        ls(path, cb);
+FoldersAws.prototype.updateRegion = function (region) {
+
+    AWS.config.update({
+        region: region || 'us-west-2'
+    });
+
 };
 
-//Temporary comment meta, have to fixed the 'viewfs' first
-//FoldersAws.prototype.meta = function(path,files,cb){
-//      lsMounts(path, cb);
-//};
-//      lsMounts(path, cb);
-//};
+var getServiceRegion = function (self, path) {
 
-FoldersAws.prototype.write = function(data, cb) {
-        var stream = data.data;
-        // var headers = data.headers;
-        var streamId = data.streamId;
-        var shareId = data.shareId;
-        var uri = data.uri;
+    var service, region;
 
-        var headers = {
-                "Content-Type" : "application/json"
+    if (self.multipleService) {
+
+        var parts = path.split('/');
+        service = parts[0];
+        path = parts.splice(0, 1).join('/');
+
+        //code to join parts into path except parts[0]
+
+    } else if (self.singleService) {
+
+        service = self.service;
+
+    } else if (self.allService) {
+        //default service
+        service = 'S3';
+    }
+
+    if (self.multipleRegion) {
+
+        var parts = path.split('/');
+        region = parts[0];
+        path = parts.splice(0, 1).join('/');
+
+    } else if (self.singleRegion) {
+
+        region = self.region;
+
+    } else if (self.allRegion) {
+        //default region
+        region = 'us-west-2';
+    }
+
+    return [service, region,path];
+};
+
+
+
+var getServiceObject = function (service, options) {
+
+    var t = new AWS[service]();
+    var s = require('./services/' + service);
+    return new s(t, options);
+};
+
+
+/*
+ * If they pass an array of bucket names,
+ *  then we'd use those as the root folder names
+ */
+
+FoldersAws.prototype.asFolders = function ( /*prefix,*/ pathPrefix, files) {
+    var out = [];
+
+    for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+
+        var o = {
+            name: file.Key
         };
+        o.fullPath = pathPrefix + o.name;
+        o.uri = "#" + this.prefix + o.fullPath;
+        o.size = file.Size || 0;
+        o.extension = path.extname(o.name).substr(1, path.extname(o.name).length - 1) || 'DIR';
+        o.type = "text/plain";
+        o.modificationTime = file.LastModified;
+        out.push(o);
 
-        write(uri, stream, function(result,error) {
-                if (error){
-                        cb(null, error);
-                        return;
-                }
 
-                cb({
-                        streamId : streamId,
-                        data : result,
-                        headers : headers,
-                        shareId : shareId
-                });
-        });
+    }
+    return out;
 
 };
 
-FoldersAws.prototype.cat = function(data, cb) {
-        var path = data;
 
-        cat(path, function(result, error) {
-        cat(path, function(result, error) {
-
-                if (error){
-                        cb(null, error);
-                        return;
-                }
-
-                cb(result);
-
-        //              var headers = {
-        //                      "Content-Length" : result.size,
-        //                      "Content-Type" : "application/octet-stream",
-        //                      "X-File-Type" : "application/octet-stream",
-        //                      "X-File-Size" : result.size,
-        //                      "X-File-Name" : result.name
-        //              };
-        //
-        //              cb({
-        //                      streamId : o.streamId,
-        //                      data : result.stream,
-        //                      headers : headers,
-        //                      shareId : data.shareId
-        //              });
-        });
+FoldersAws.prototype.features = FoldersAws.features = {
+    cat: true,
+    ls: true,
+    write: true,
+    server: false
 };
 
+
+
+FoldersAws.prototype.write = function (path, data, cb) {
+
+
+	var self = this,
+        service,region,pathSuffix;
+    var arr = getServiceRegion(self, path);
+	service = arr[0];
+	region = arr[1];
+	pathSuffix = arr[2];
+    this.serviceObj = getServiceObject(service, {
+        bucket: self.bucket
+    });
+    self.serviceObj.write(pathSuffix, data, cb);
+
+};
+
+
+FoldersAws.prototype.cat = function (path, cb) {
+    var self = this,
+        service,region,pathSuffix;
+    var arr = getServiceRegion(self, path);
+	service = arr[0];
+	region = arr[1];
+	pathSuffix = arr[2];
+    this.serviceObj = getServiceObject(service, {
+        bucket: self.bucket
+    });
+    self.serviceObj.cat(pathSuffix, cb);
+
+};
+
+FoldersAws.prototype.ls = function (path, cb) {
+
+    var self = this,
+        service,region,pathSuffix;
+    var arr = getServiceRegion(self, path);
+	service = arr[0];
+	region = arr[1];
+	pathSuffix = arr[2]
+    this.serviceObj = getServiceObject(service, {
+        bucket: self.bucket
+    });
+    self.serviceObj.ls(pathSuffix, cb);
+
+};
