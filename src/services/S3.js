@@ -1,3 +1,4 @@
+var path = require('path');
 var s3;
 
 
@@ -30,11 +31,20 @@ S3.prototype.configure = function (options) {
 S3.prototype.ls = function (path, cb) {
 
     var self = this,
-        bucket, pathPrefix, arr;
+        bucket, pathPrefix, arr, result;
     arr = getBucketKey(self, path);
     bucket = arr[0];
     pathPrefix = arr[1];
-    lsBucket(bucket, pathPrefix, cb);
+
+    if (self.allBucket) {
+        listAllBuckets(cb);
+        return;
+    }
+    lsBucket(bucket, pathPrefix, function (err, data) {
+        result = self.asFolders(data);
+        cb(null, result);
+
+    });
 
 };
 
@@ -71,7 +81,7 @@ S3.prototype.write = function (path, data, cb) {
  * associated with this 
  * credentials
  */
-var listAllBuckets = function (path, cb) {
+var listAllBuckets = function (cb) {
 
 
     s3.listBuckets(function (err, data) {
@@ -84,7 +94,8 @@ var listAllBuckets = function (path, cb) {
             bucket = data.Buckets.map(function (item) {
                 return (item.Name);
 
-            })
+
+            });
             cb(null, bucket);
 
         }
@@ -159,29 +170,58 @@ var cat = function (bucket, key, cb) {
 
 var getBucketKey = function (self, path) {
 
-    var bucket, key;
+
+
+    var bucket;
 
     if (self.multipleBucket) {
-        var parts = path.split('/')
+        var parts = path.split('/');
         bucket = parts[0];
         if (!(self.bucket.indexOf(bucket) > -1)) {
             console.log('This bucket not configured in your list ', null);
             return;
 
         }
-        key = parts[1];
 
+
+        path = parts.slice(1, parts.length).join('/');
     } else if (self.singleBucket) {
-        key = path;
+
         bucket = self.bucket;
     } else if (self.allBucket) {
-        var parts = path.split('/')
+        var parts = path.split('/');
         bucket = parts[0];
-        key = parts[1];
+
+        path = parts.slice(1, parts.length).join('/');
 
     }
-    return [bucket, key];
+    return [bucket, path];
 
 }
+
+S3.prototype.asFolders = function ( /*prefix,*/ files) {
+    var out = [],
+        self = this;
+
+    for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+
+        var o = {
+            name: file.Key
+        };
+        o.fullPath = o.name;
+        o.uri = "#" + self.prefix + o.fullPath;
+        o.size = file.Size || 0;
+        o.extension = path.extname(o.name).substr(1, path.extname(o.name).length - 1) || 'DIR';
+        o.type = "text/plain";
+        o.modificationTime = file.LastModified;
+        out.push(o);
+
+
+    }
+    return out;
+
+};
+
 
 module.exports = S3;
