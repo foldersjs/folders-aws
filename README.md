@@ -13,6 +13,7 @@ Installation (use --save to save to package.json)
 ```sh
 npm install folders-aws
 ```
+##S3
 
 Basic Usage
 
