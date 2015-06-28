@@ -25,7 +25,7 @@ Provider constructor, could pass the special option/param in the config param.
 var FoldersAws = require('folders-aws');
 
 var config = {
-           accessKeyId: : "Amazon Acess Id" (String),
+           accessKeyId: "Amazon Acess Id" (String),
            secretAccessKey : "Amazon access key" (String),
 		   service : ['S3','EC2'],
 		   region: ['us-west-2','us-east-1'],
