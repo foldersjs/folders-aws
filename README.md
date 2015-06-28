@@ -97,7 +97,7 @@ For example
 var FoldersAws = require('folders-aws');
 
 var config = {
-           accessKeyId: : "Amazon Acess Id" (String),
+           accessKeyId: "Amazon Acess Id" (String),
            secretAccessKey : "Amazon access key" (String),
 		   service : 'S3',
 		   region: 'us-west-2',
