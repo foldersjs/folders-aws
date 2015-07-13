@@ -35,8 +35,6 @@ var config = {
 var aws = new FoldersAws("localhost-aws", config);
 ```
 
-
-
 ###ls
 
 ```js
@@ -88,47 +86,3 @@ aws.write('s3/us-west-2/mybcuket1/video/some_movie.mp4',writeData, function(err,
 
 
 'service' , 'region' and 'bucket' attributes  in 'config' can be 'String' or 'Array' or 'Optional (undefined)'. 
-In case of 'service' or 'region' or 'bucket' attributes of type 'String' , we can safely remove them from 'path' argument
-which is passed to 'ls' , 'cat' and 'write' methods . 
-
-For example 
-
-```js
-var FoldersAws = require('folders-aws');
-
-var config = {
-           accessKeyId: "Amazon Acess Id" (String),
-           secretAccessKey : "Amazon access key" (String),
-		   service : 'S3',
-		   region: 'us-west-2',
-		   bucket : 'mybucket1'
-};
-
-var aws = new FoldersAws("localhost-aws", config);
-```
-
-###ls
-
-```js
-aws.ls('video/', function(err,data) {
-        console.log("Folder listing", data);
-});
-```
-
-###cat
-
-```js
-aws.cat('video/movie.wmv', function(err,result) {
-        console.log("Read Stream ", result.stream);
-});
-```
-
-###write
-
-```js
-var writeData = getWriteStreamSomeHow('some_movie.mp4');
-
-aws.write('video/some_movie.mp4',writeData, function(err,result) {
-        console.log("Write status ", result);
-});
-```

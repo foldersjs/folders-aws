@@ -9,7 +9,11 @@ var path = require('path');
  * export AWS_SECRET_ACCESS_KEY='SECRET'
  */
 
-
+/*
+ * ALL Amazon services supported by this module
+ */ 
+ 
+var ALL_SERVICES = ['S3','EC2'];
 
 var FoldersAws = function (prefix, options) {
 
@@ -45,122 +49,41 @@ FoldersAws.prototype.configure = function (options) {
         self.service = options.service.toUpperCase();
     } else if (options.service instanceof Array) {
         self.multipleService = true;
-        self.service = options.service;
+        self.service = options.service.map(function(x){return x.toUpperCase();});
     } else if (!options.service) {
         self.allService = true;
 
     }
 
-    if (typeof options.region == 'string') {
-        self.singleRegion = true;
-        self.region = options.region.toLowerCase();
-    } else if (options.region instanceof Array) {
-        self.multipleRegion = true;
-        self.region = options.region;
-    } else if (!options.region) {
-        self.allRegion = true;
-    }
 
-
+	self.region = options.region;
     self.bucket = options.bucket;
 
 };
 
 
-/*
-var getUri = function(path, cb) {
-        var s3 = new AWS.S3();
-        var params = {Bucket: 'myBucket', Key: 'myKey'};
-        s3.getSignedUrl('getObject', params, function (err, url) {
-          console.log("The URL is", url);
-        });
-// http://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getObject-property
-var params = {Bucket: 'myBucket', Key: 'myKey', Expires: 60}; // seconds
-var params = {Bucket: 'myBucket', Key: 'myKey'};
-var url = s3.getSignedUrl('putObject', params);
 
-}
-*/
 
 module.exports = FoldersAws;
 
-FoldersAws.prototype.updateRegion = function (region) {
-
-    AWS.config.update({
-        region: region || 'us-west-2'
-    });
-
-};
-
-var getServiceRegion = function (self, path) {
-
-    var service, region;
-
-    if (self.multipleService) {
-
-        if (path[0] == '/') {
-            path = path.replace('/', '');
-        }
-        var parts = path.split('/');
-        service = parts[0];
-
-        if (!(self.service.indexOf(service) > -1)) {
-            console.log('This service not configured in your list ');
-            return;
-
-        }
-        path = parts.slice(1, parts.length).join('/');
-
-        //code to join parts into path except parts[0]
-
-    } else if (self.singleService) {
-
-        service = self.service;
-
-    } else if (self.allService) {
-
-        if (path[0] == '/') {
-            path = path.replace('/', '');
-        }
-        var parts = path.split('/');
-        service = parts[0];
-        path = parts.slice(1, parts.length).join('/');
-    }
-
-    if (self.multipleRegion) {
-
-        var parts = path.split('/');
-        region = parts[0];
-
-        if (!(self.region.indexOf(region) > -1)) {
-            console.log('This region not configured in your list ');
-            return;
-
-        }
-        path = parts.slice(1, parts.length).join('/');
-
-    } else if (self.singleRegion) {
-
-        region = self.region;
-
-    } else if (self.allRegion) {
 
 
-        var parts = path.split('/');
-        region = parts[0];
-        path = parts.slice(1, parts.length).join('/');
-    }
+var getService = function (self, path) {
 
-    return [service.toUpperCase(), region.toLowerCase(), path];
+     var service; 
+     var parts = path.split('/');
+     service = parts[0].toUpperCase();
+     path = parts.slice(1, parts.length).join('/');
+
+    return [service, path];
 };
 
 
 
-var getServiceObject = function (service, options) {
+var getRegionObject = function (options) {
 
-    var t = new AWS[service]();
-    var s = require('./services/' + service);
-    return new s(t, options);
+    var s = require('./regions/region.js');
+    return new s(AWS,options);
 };
 
 
@@ -179,8 +102,96 @@ FoldersAws.prototype.features = FoldersAws.features = {
     server: false
 };
 
+FoldersAws.prototype.ls = function (path, cb) {
 
+	var self = this,
+        service,  pathPrefix,arr;
+	
+	path = (path == '/' ? null : path.slice(1));
+   
+	
+	if(path == null){
+		
+		service = self.service;
+		pathPrefix = path;
+		
+	}else
+	{		
+			//path = S3/uswest/
+			arr = getService(self, path);
+			service = arr[0];
+			
+			pathPrefix = arr[1];
+	}	
+	
+   
+	if (self.allService ) {
+		
+		if (path == null){
+		
+			//listing service as folders
+			return cb(null, serviceAsFolders(ALL_SERVICES));
+			
+			
+			// start from here now 
+		}
+        
+    }
+	
+	 if (self.multipleService ) {
+		if (path == null){
+			
+			//listing service as folders
+			return cb(null, serviceAsFolders(service));
+			
+			// start from here now 
+		}	
+        
+        
+    }	
 
+	 if (self.singleService ) {
+		if (path == null){
+			
+			//listing service as folders
+			return cb(null, serviceAsFolders([service]));
+			
+			// start from here now 
+		}
+        
+        
+    }		
+	
+		self.regionObj = getRegionObject({region:self.region,bucket:self.bucket});
+			
+		return	self.regionObj.ls(service,pathPrefix, cb);
+			
+			
+	
+
+};
+
+var serviceAsFolders = function(serv){
+	
+	var data = [];
+	for(var i = 0 ; i < serv.length;++i){
+		var o = {};
+		o.name = serv[i];
+		o.extension =  '+folder';
+		o.size = 0;
+		o.type = "" ; 
+		o.fullPath = '/' + o.name ;
+		//o.uri = "#" + this.prefix + o.fullPath;
+		o.uri = o.fullPath;
+		if (!o.meta) o.meta = {'group':'aws','owner':'aws','permission':0};
+		var cols = [ 'permission', 'owner', 'group' ];
+		data.push(o);
+		
+	}
+	return data;
+	
+}
+/*
 FoldersAws.prototype.write = function (path, data, cb) {
 
 
@@ -214,19 +225,4 @@ FoldersAws.prototype.cat = function (path, cb) {
 
 };
 
-FoldersAws.prototype.ls = function (path, cb) {
-
-    var self = this,
-        service, region, pathPrefix;
-    var arr = getServiceRegion(self, path);
-    service = arr[0];
-    region = arr[1];
-
-    pathPrefix = arr[2];
-    this.updateRegion(region);
-    this.serviceObj = getServiceObject(service, {
-        bucket: self.bucket
-    });
-    self.serviceObj.ls(pathPrefix, cb);
-
-};
+*/

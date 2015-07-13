@@ -1,7 +1,7 @@
 var FoldersAws = require('../src/folders-aws.js');
 
 var config = {
-           accessKeyId: "Amazon Acess Id",
+           accessKeyId: "Amazon Access Id",
            secretAccessKey : "Amazon access key",
            service : ['S3','EC2'],
            region: ['us-west-2','us-east-1'],
