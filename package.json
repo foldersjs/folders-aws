@@ -14,7 +14,8 @@
   "main": "./src/folders-aws",
   "homepage": "https://github.com/foldersjs/folders-aws",
   "dependencies": {
-    "aws-sdk": "2.x.x"
+    "aws-sdk": "2.x.x",
+    "mime": "1.x.x"
   },
   "devDependencies": {}
 }
