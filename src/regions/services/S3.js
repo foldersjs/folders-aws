@@ -124,6 +124,10 @@ S3.prototype.ls = function (service, region, path, cb) {
  * translates them into folders.io records
  */
 var listBucket = function (self, bucket, pathPrefix, dir, cb) {
+    //pathPrefix should always end with '/'
+    //if (pathPrefix.indexOf('/', pathPrefix.length - 1) == -1) {
+     //   pathPrefix+='/';
+    //}
 
     lsBucket(bucket, pathPrefix, function (err, data) {
 
@@ -178,12 +182,17 @@ var bucketAsFolders = function (bucket, dir) {
 S3.prototype.asFolders = function (pathPrefix, data, dir) {
 
     //pathPrefix = (pathPrefix == null ? null : pathPrefix.slice(1));
+    if (pathPrefix && pathPrefix.length > 0) {
+        if (pathPrefix[pathPrefix.length - 1]!='/') pathPrefix+='/';
+    }
+    
 
     var z = [];
     for (var i = 0; i < data.length; ++i) {
 
         if (data[i].Key != pathPrefix) {
             var name = data[i].Key.replace(pathPrefix, "");
+            
             var res = name.split("/");
 
             /*
@@ -211,11 +220,8 @@ S3.prototype.asFolders = function (pathPrefix, data, dir) {
                 var cols = ['permission', 'owner', 'group'];
 
                 z.push(o);
-
             }
-
         }
-
     }
     return z;
 
@@ -277,9 +283,7 @@ var listAllBuckets = function (cb) {
 
 var lsBucket = function (bucket, pathPrefix, cb) {
     var result;
-
-
-
+    
     s3.listObjects({
         Bucket: bucket,
         Prefix: pathPrefix
