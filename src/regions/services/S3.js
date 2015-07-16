@@ -167,8 +167,8 @@ var bucketAsFolders = function (bucket, dir) {
             'owner': 'aws',
             'permission': 0
         };
-		//FIXME: how to get modification date for buckets ?
-		o.modificationTime = Date.now();
+        //FIXME: how to get modification date for buckets ?
+        o.modificationTime = Date.now();
         var cols = ['permission', 'owner', 'group'];
         data.push(o);
 
@@ -202,7 +202,7 @@ S3.prototype.asFolders = function (pathPrefix, data, dir) {
              */
             if (!res[1]) {
                 var o = {};
-				o.name = (name.charAt(name.length-1) == '/' ? name.substr(0,name.length-1):name);
+                o.name = (name.charAt(name.length-1) == '/' ? name.substr(0,name.length-1):name);
                 o.extension = path.extname(name).substr(1, path.extname(name).length - 1) || '+folder';
                 o.size = data[i].Size || 0;
                 o.type = (o.extension == '+folder' ? "" : mime.lookup(o.extension));
@@ -219,7 +219,7 @@ S3.prototype.asFolders = function (pathPrefix, data, dir) {
                     'owner': 'aws',
                     'permission': 0
                 };
-				o.modificationTime = Date.parse(data[i].LastModified);	
+                o.modificationTime = Date.parse(data[i].LastModified);  
                 var cols = ['permission', 'owner', 'group'];
 
                 z.push(o);
@@ -231,30 +231,32 @@ S3.prototype.asFolders = function (pathPrefix, data, dir) {
 };
 
 S3.prototype.cat = function (path, cb) {
-
+  
     var self = this,
-        bucket, key, arr;
+    bucket, pathPrefix, arr;
+
     arr = getBucketKey(self, path);
     bucket = arr[0];
-    key = arr[1];
-    cat(bucket, key, cb);
-
+    pathPrefix = arr[1];
+    cat(bucket,pathPrefix,cb);
+    
 
 };
 
 
 S3.prototype.write = function (path, data, cb) {
-
+      
     var self = this,
-        bucket, key, arr;
+    bucket, key, arr;
+
     arr = getBucketKey(self, path);
     bucket = arr[0];
     key = arr[1];
-
-
+        
     write(bucket, key, data, cb);
 
 };
+
 
 
 /*
@@ -330,25 +332,40 @@ var write = function (bucket, key, stream, cb) {
 
 
 var cat = function (bucket, key, cb) {
-
+    
     var params = {
-        Bucket: bucket,
-        Key: key
+        Bucket: bucket, /* required */
+        Key: key /* required */ 
     };
-    // FIXME: See if we can get some info on the remote file, esp. length.
-    // headObject / listObjects  works well enough usually.
-    var file = s3.getObject(params).createReadStream();
+    
+    s3.headObject(params, function(err, data) {
+        if (err) {
+            console.log(err, err.stack);
+            return cb(err);
+            
+        }   // an error occurred
+        else{     
+            
+            
+            // FIXME: See if we can get some info on the remote file, esp. length.
+            // headObject / listObjects  works well enough usually.
+            
+            var file = s3.getObject(params).createReadStream();
 
-    cb(null, {
-        stream: file
-            //size : fileStatus.length,
-            //name : fileStatus.pathSuffix
+            cb(null, {
+                stream: file,
+                size :  data.ContentLength,
+                name :  path.basename(key)
+            });
+            
+            
+        }// successful response
+        
     });
+    
 };
 
 var getBucketKey = function (self, path) {
-
-
 
     var bucket;
     var parts = path.split('/');
@@ -357,7 +374,3 @@ var getBucketKey = function (self, path) {
     return [bucket, path];
 
 }
-
-
-
-

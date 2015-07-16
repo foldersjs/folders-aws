@@ -180,38 +180,42 @@ var regionAsFolders = function (region, dir) {
 
 }
 
-/*
-Region.prototype.write = function (path, data, cb) {
+
+Region.prototype.write = function (service,path, data, cb) {
 
 
-    var self = this,
-        service, region, pathPrefix;
-    var arr = getServiceRegion(self, path);
-    service = arr[0];
-    region = arr[1];
-    pathPrefix = arr[2];
-    this.updateRegion(region);
-    this.serviceObj = getServiceObject(service, {
+   var self = this,
+        region, pathPrefix, arr;
+
+    	arr = getRegion(self, path);
+        region = arr[0];
+        pathPrefix = arr[1];
+    
+
+    self.serviceObj = getServiceObject(service,region, {
         bucket: self.bucket
-    });
-    self.serviceObj.write(pathPrefix, data, cb);
+    })
+    return self.serviceObj.write(pathPrefix,data,cb);
 
 };
 
 
-Region.prototype.cat = function (path, cb) {
+
+Region.prototype.cat = function (service,path, cb) {
+   
+	
     var self = this,
-        service, region, pathPrefix;
-    var arr = getServiceRegion(self, path);
-    service = arr[0];
-    region = arr[1];
-    pathPrefix = arr[2];
-    this.updateRegion(region);
-    this.serviceObj = getServiceObject(service, {
+        region, pathPrefix, arr;
+
+    	 arr = getRegion(self, path);
+        region = arr[0];
+        pathPrefix = arr[1];
+    
+
+    self.serviceObj = getServiceObject(service,region, {
         bucket: self.bucket
-    });
-    self.serviceObj.cat(pathPrefix, cb);
+    })
+    return self.serviceObj.cat(pathPrefix, cb);
+
 
 };
-
-*/
