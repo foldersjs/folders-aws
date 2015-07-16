@@ -128,7 +128,7 @@ Region.prototype.ls = function (service, path, cb) {
 
 
 
-    self.serviceObj = getServiceObject(service, {
+    self.serviceObj = getServiceObject(service,region, {
         bucket: self.bucket
     })
     return self.serviceObj.ls(service, region, pathPrefix, cb);
@@ -140,9 +140,9 @@ Region.prototype.ls = function (service, path, cb) {
  *
  *
  */
-var getServiceObject = function (service, options) {
+var getServiceObject = function (service,region, options) {
 
-    var t = new AWS[service]();
+    var t = new AWS[service]({region:region});
     var s = require('./services/' + service);
     return new s(AWS, t, options);
 };
@@ -169,6 +169,8 @@ var regionAsFolders = function (region, dir) {
             'owner': 'aws',
             'permission': 0
         };
+		//FIXME: How to get modification time ?
+		o.modificationTime = Date.now();
         var cols = ['permission', 'owner', 'group'];
         data.push(o);
 

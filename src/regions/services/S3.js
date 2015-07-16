@@ -167,6 +167,8 @@ var bucketAsFolders = function (bucket, dir) {
             'owner': 'aws',
             'permission': 0
         };
+		//FIXME: how to get modification date for buckets ?
+		o.modificationTime = Date.now();
         var cols = ['permission', 'owner', 'group'];
         data.push(o);
 
@@ -200,7 +202,7 @@ S3.prototype.asFolders = function (pathPrefix, data, dir) {
              */
             if (!res[1]) {
                 var o = {};
-                o.name = name;
+				o.name = (name.charAt(name.length-1) == '/' ? name.substr(0,name.length-1):name);
                 o.extension = path.extname(name).substr(1, path.extname(name).length - 1) || '+folder';
                 o.size = data[i].Size || 0;
                 o.type = (o.extension == '+folder' ? "" : mime.lookup(o.extension));
@@ -217,6 +219,7 @@ S3.prototype.asFolders = function (pathPrefix, data, dir) {
                     'owner': 'aws',
                     'permission': 0
                 };
+				o.modificationTime = Date.parse(data[i].LastModified);	
                 var cols = ['permission', 'owner', 'group'];
 
                 z.push(o);

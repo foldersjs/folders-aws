@@ -17,5 +17,9 @@
     "aws-sdk": "2.x.x",
     "mime": "1.x.x"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-esformatter": "^4.0.0",
+    "gulp-eslint": "^0.15.0"
+  }
 }

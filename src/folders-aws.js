@@ -107,6 +107,10 @@ FoldersAws.prototype.ls = function (path, cb) {
 	var self = this,
         service,  pathPrefix,arr;
 	
+	if (path && path.length > 0) {
+        if (path[path.length - 1]!='/') path+='/';
+    }
+	
 	path = (path == '/' ? null : path.slice(1));
    
 	
@@ -183,6 +187,7 @@ var serviceAsFolders = function(serv){
 		o.fullPath = '/' + o.name ;
 		//o.uri = "#" + this.prefix + o.fullPath;
 		o.uri = o.fullPath;
+		o.modificationTime = Date.now();
 		if (!o.meta) o.meta = {'group':'aws','owner':'aws','permission':0};
 		var cols = [ 'permission', 'owner', 'group' ];
 		data.push(o);
