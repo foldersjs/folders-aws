@@ -128,7 +128,7 @@ Region.prototype.ls = function (service, path, cb) {
 
 
 
-    self.serviceObj = getServiceObject(service,region, {
+    self.serviceObj = getServiceObject(service, region, {
         bucket: self.bucket
     })
     return self.serviceObj.ls(service, region, pathPrefix, cb);
@@ -140,9 +140,13 @@ Region.prototype.ls = function (service, path, cb) {
  *
  *
  */
-var getServiceObject = function (service,region, options) {
+var getServiceObject = function (service, region, options) {
 
-    var t = new AWS[service]({region:region});
+
+
+    var t = new AWS[service]({
+        region: region
+    });
     var s = require('./services/' + service);
     return new s(AWS, t, options);
 };
@@ -169,8 +173,8 @@ var regionAsFolders = function (region, dir) {
             'owner': 'aws',
             'permission': 0
         };
-		//FIXME: How to get modification time ?
-		o.modificationTime = Date.now();
+        //FIXME: How to get modification time ?
+        o.modificationTime = Date.now();
         var cols = ['permission', 'owner', 'group'];
         data.push(o);
 
@@ -181,41 +185,76 @@ var regionAsFolders = function (region, dir) {
 }
 
 
-Region.prototype.write = function (service,path, data, cb) {
+Region.prototype.write = function (service, path, data, cb) {
 
 
-   var self = this,
+    var self = this,
         region, pathPrefix, arr;
 
-    	arr = getRegion(self, path);
-        region = arr[0];
-        pathPrefix = arr[1];
-    
+    arr = getRegion(self, path);
+    region = arr[0];
+    pathPrefix = arr[1];
 
-    self.serviceObj = getServiceObject(service,region, {
+
+    self.serviceObj = getServiceObject(service, region, {
         bucket: self.bucket
     })
-    return self.serviceObj.write(pathPrefix,data,cb);
+    return self.serviceObj.write(pathPrefix, data, cb);
 
 };
 
 
 
-Region.prototype.cat = function (service,path, cb) {
-   
-	
+
+Region.prototype.cat = function (service, path, cb) {
+
+
     var self = this,
         region, pathPrefix, arr;
 
-    	 arr = getRegion(self, path);
-        region = arr[0];
-        pathPrefix = arr[1];
-    
+    arr = getRegion(self, path);
+    region = arr[0];
+    pathPrefix = arr[1];
 
-    self.serviceObj = getServiceObject(service,region, {
+    self.serviceObj = getServiceObject(service, region, {
         bucket: self.bucket
     })
     return self.serviceObj.cat(pathPrefix, cb);
+
+
+};
+
+Region.prototype.unlink = function (service, path, cb) {
+
+    var self = this,
+        region, pathPrefix, arr;
+    arr = getRegion(self, path);
+    region = arr[0];
+    pathPrefix = arr[1];
+
+
+    self.serviceObj = getServiceObject(service, region, {
+        bucket: self.bucket
+    })
+    return self.serviceObj.unlink(pathPrefix, cb);
+
+
+};
+
+
+Region.prototype.rmdir = function (service, path, cb) {
+
+    var self = this,
+        region, pathPrefix, arr;
+    arr = getRegion(self, path);
+    region = arr[0];
+    pathPrefix = arr[1];
+
+
+    self.serviceObj = getServiceObject(service, region, {
+        bucket: self.bucket
+    })
+    return self.serviceObj.rmdir(pathPrefix, cb);
 
 
 };

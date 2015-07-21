@@ -195,7 +195,7 @@ var serviceAsFolders = function(serv){
 	}
 	return data;
 	
-}
+};
 
 FoldersAws.prototype.write = function (path, data, cb) {
 
@@ -237,5 +237,60 @@ FoldersAws.prototype.cat = function (path, cb) {
 	pathPrefix = arr[1];
 	self.regionObj = getRegionObject({region:self.region,bucket:self.bucket});
 	return	self.regionObj.cat(service,pathPrefix, cb);
+};
+
+FoldersAws.prototype.unlink = function (path, cb) {
+
+    var self = this,
+        service, pathPrefix, arr;
+
+    if (!path) {
+
+        return cb(new Error('invalid url '), null);
+    }
+
+    path = path.slice(1);
+
+    arr = getService(self, path);
+    service = arr[0];
+    pathPrefix = arr[1];
+    self.regionObj = getRegionObject({
+        region: self.region,
+        bucket: self.bucket
+    });
+    return self.regionObj.unlink(service, pathPrefix, cb);
+
+};
+
+
+FoldersAws.prototype.rmdir = function (path, cb) {
+
+    var self = this,
+        service, pathPrefix, arr;
+
+
+    if (path && path.length > 0) {
+        if (path[path.length - 1] != '/') path += '/';
+    } else {
+
+        return cb(new Error('invalid url '), null);
+    }
+
+    if (path.split('/').length < 6) {
+
+        return cb(new Error('Unable to delete configured services'), null);
+
+    }
+
+    path = path.slice(1);
+
+    arr = getService(self, path);
+    service = arr[0];
+    pathPrefix = arr[1];
+    self.regionObj = getRegionObject({
+        region: self.region,
+        bucket: self.bucket
+    });
+    return self.regionObj.rmdir(service, pathPrefix, cb);
 
 };
