@@ -58,6 +58,8 @@ FoldersAws.prototype.configure = function (options) {
 
 	self.region = options.region;
     self.bucket = options.bucket;
+	self.partSize  = options.partSize;
+	self.queueSize = options.queueSize;
 
 };
 
@@ -169,9 +171,6 @@ FoldersAws.prototype.ls = function (path, cb) {
 		self.regionObj = getRegionObject({region:self.region,bucket:self.bucket});
 			
 		return	self.regionObj.ls(service,pathPrefix, cb);
-			
-			
-	
 
 };
 
@@ -213,7 +212,12 @@ FoldersAws.prototype.write = function (path, data, cb) {
 	arr = getService(self, path);
 	service = arr[0];
 	pathPrefix = arr[1];
-	self.regionObj = getRegionObject({region:self.region,bucket:self.bucket});
+	self.regionObj = getRegionObject({
+		region:self.region,
+		bucket:self.bucket,
+		partSize:self.partSize,
+		queueSize:self.queueSize
+	});
 	return	self.regionObj.write(service,pathPrefix,data, cb);
 
 };

@@ -31,6 +31,8 @@ Region.prototype.configure = function (options) {
     }
 
     self.bucket = options.bucket;
+	self.partSize  = options.partSize;
+	self.queueSize = options.queueSize;
 
 };
 
@@ -126,8 +128,6 @@ Region.prototype.ls = function (service, path, cb) {
 
     }
 
-
-
     self.serviceObj = getServiceObject(service, region, {
         bucket: self.bucket
     })
@@ -197,7 +197,9 @@ Region.prototype.write = function (service, path, data, cb) {
 
 
     self.serviceObj = getServiceObject(service, region, {
-        bucket: self.bucket
+        bucket: self.bucket,
+		partSize  :self.partSize,
+		queueSize : self.queueSize
     })
     return self.serviceObj.write(pathPrefix, data, cb);
 

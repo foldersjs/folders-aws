@@ -29,7 +29,9 @@ var config = {
            secretAccessKey : "Amazon access key" (String),
 		   service : ['S3','EC2'],
 		   region: ['us-west-2','us-east-1'],
-		   bucket : ['mybucket1','mybucket2']
+		   bucket : ['mybucket1','mybucket2'],
+		   partSize: 10 *1024*1024, // (optional) partsize  default is 5 MB 
+ 		   queueSize:5 // (optional) concurrency level
 };
 
 var aws = new FoldersAws("localhost-aws", config);

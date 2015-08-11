@@ -10,9 +10,7 @@ var S3 = function (aws, service, options) {
     s3 = service;
     this.configure(options);
 
-
 };
-
 
 
 S3.prototype.configure = function (options) {
@@ -29,6 +27,8 @@ S3.prototype.configure = function (options) {
     }
 
     self.bucket = options.bucket;
+	self.partSize  = options.partSize;
+	self.queueSize = options.queueSize;
 
 
 
@@ -246,10 +246,7 @@ S3.prototype.cat = function (path, cb) {
     bucket = arr[0];
     pathPrefix = arr[1];
     cat(bucket, pathPrefix, cb);
-
-
-
-
+	
 };
 
 
@@ -258,7 +255,7 @@ S3.prototype.write = function (path, data, cb) {
 
 
     var self = this,
-        bucket, key, arr;
+        bucket, key, arr,options;
 
     arr = getBucketKey(self, path);
     bucket = arr[0];
@@ -266,7 +263,8 @@ S3.prototype.write = function (path, data, cb) {
 
 
 
-    write(bucket, key, data, cb);
+	options = {partSize  : self.partSize,queueSize : self.queueSize};
+    write(bucket, key, data,options, cb);
 
 };
 
@@ -450,17 +448,19 @@ var lsBucket = function (bucket, pathPrefix, cb) {
  */
 
 
-var write = function (bucket, key, stream, cb) {
+var write = function (bucket, key, stream, options,cb) {
     var params = {
         Bucket: bucket,
         Key: key,
         Body: stream
     };
 
-
-    s3.upload(params).
+	
+	
+    s3.upload(params,options).
     on('httpUploadProgress', function (evt) {
-        console.log(evt);
+        
+		console.log(evt);
     }).
     send(function (error, response) {
 
@@ -524,6 +524,4 @@ var getBucketKey = function (self, path) {
     bucket = parts[0];
     path = parts.slice(1, parts.length).join('/');
     return [bucket, path];
-
-
 };
