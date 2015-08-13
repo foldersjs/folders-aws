@@ -16,6 +16,40 @@ npm install folders-aws
 ##S3
 
 Basic Usage
+### Configuration
+In order to access aws services , you must provide credentials . There are 2 ways to provide them 
+
+#### Credentials from Disk
+Create  a json file named '/path/to/config.json' with the contents:
+
+```
+{ 
+  "accessKeyId": "your access key id", 
+  "secretAccessKey": "your secret access key "
+}
+
+```
+Edit config.js and specify the path of this json file at around line 7
+
+```
+Config.aws.loadFromPath = '/path/to/config.json' ;
+```
+#### Credentials from Environment Variables
+You can set environment variables to provide sdk credentials . 
+This means that if you properly set your environment variables, 
+you do not need to manage credentials in your application at all.
+
+The keys names must be as follows:
+
+```
+export AWS_ACCESS_KEY_ID =  "your access key id" 
+export AWS_SECRET_ACCESS_KEY = "your secreet access key "
+```
+
+#### Credentials in the constructor
+This means you can pass credentials directly to the folders-aws constructor object as mentioned in next section .This method is not recommended 
+
+if both 'Credentials from Disk' 'and 'Credentials from Environment Variables' are set then former takes precedence over later 
 
 ### Constructor
 
@@ -36,6 +70,8 @@ var config = {
 
 var aws = new FoldersAws("localhost-aws", config);
 ```
+It is not recommended to provide 'accessKeyId' and 'secretAccessKey' in the constructor directly and use other methods as mentioned
+in configuration section to do this.
 
 ###ls
 

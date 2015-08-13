@@ -1,6 +1,7 @@
 // Folders.io connector to AWS
 var AWS = require('aws-sdk');
 var path = require('path');
+var Config = require('../config');
 
 
 /*
@@ -28,9 +29,16 @@ FoldersAws.prototype.configure = function (options) {
     /*
      * load credentials from disk file 
      */
-    if (options.credentialsFilePath) {
-        AWS.config.loadFromPath(options.credentialsFilePath);
+    if (Config.aws.loadFromPath) {
+        AWS.config.loadFromPath(Config.aws.loadFromPath);
     }
+	else if (Config.aws.accessKeyId && Config.aws.secretAccessKey ){
+		
+		 AWS.config.update({
+            accessKeyId: Config.aws.accessKeyId,
+            secretAccessKey: Config.aws.secretAccessKey
+        });
+	}
     /*
      * hard-code credentials inside an application. 
      * Use this method only for small personal 
@@ -56,8 +64,8 @@ FoldersAws.prototype.configure = function (options) {
     }
 
 
-	self.region = options.region;
-    self.bucket = options.bucket;
+	self.region    = options.region;
+    self.bucket    = options.bucket;
 	self.partSize  = options.partSize;
 	self.queueSize = options.queueSize;
 
@@ -171,6 +179,9 @@ FoldersAws.prototype.ls = function (path, cb) {
 		self.regionObj = getRegionObject({region:self.region,bucket:self.bucket});
 			
 		return	self.regionObj.ls(service,pathPrefix, cb);
+			
+			
+	
 
 };
 
@@ -239,7 +250,10 @@ FoldersAws.prototype.cat = function (path, cb) {
 	arr = getService(self, path);
 	service = arr[0];
 	pathPrefix = arr[1];
-	self.regionObj = getRegionObject({region:self.region,bucket:self.bucket});
+	self.regionObj = getRegionObject({
+		region:self.region,
+		bucket:self.bucket
+	});
 	return	self.regionObj.cat(service,pathPrefix, cb);
 };
 
