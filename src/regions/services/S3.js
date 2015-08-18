@@ -27,8 +27,8 @@ S3.prototype.configure = function (options) {
     }
 
     self.bucket = options.bucket;
-	self.partSize  = options.partSize;
-	self.queueSize = options.queueSize;
+    self.partSize = options.partSize;
+    self.queueSize = options.queueSize;
 
 
 
@@ -246,7 +246,7 @@ S3.prototype.cat = function (path, cb) {
     bucket = arr[0];
     pathPrefix = arr[1];
     cat(bucket, pathPrefix, cb);
-	
+
 };
 
 
@@ -255,7 +255,7 @@ S3.prototype.write = function (path, data, cb) {
 
 
     var self = this,
-        bucket, key, arr,options;
+        bucket, key, arr, options;
 
     arr = getBucketKey(self, path);
     bucket = arr[0];
@@ -263,8 +263,11 @@ S3.prototype.write = function (path, data, cb) {
 
 
 
-	options = {partSize  : self.partSize,queueSize : self.queueSize};
-    write(bucket, key, data,options, cb);
+    options = {
+        partSize: self.partSize,
+        queueSize: self.queueSize
+    };
+    write(bucket, key, data, options, cb);
 
 };
 
@@ -300,10 +303,69 @@ S3.prototype.rmdir = function (path, cb) {
     arr = getBucketKey(self, path);
     bucket = arr[0];
     pathPrefix = arr[1];
+
     rmdir(bucket, pathPrefix, cb);
 
 };
 
+/*
+ * 
+ * creating a folder
+ */
+
+S3.prototype.mkdir = function (path, cb) {
+
+    var self = this,
+        bucket, pathPrefix, arr;
+
+    arr = getBucketKey(self, path);
+    bucket = arr[0];
+    pathPrefix = arr[1];
+    return mkdir(bucket, pathPrefix, cb);
+
+};
+
+var mkdir = function (bucket, path, cb) {
+    var params = {
+        Bucket: bucket,
+        /* required */
+        Key: path,
+        /* required */
+
+    };
+
+    s3.headObject(params, function (err, data) {
+        if (err) {
+
+            if (err.code === 'NotFound') {
+
+                // object doesnot exist .We can create dir now 
+
+
+                s3.putObject(params, function (err, data) {
+                    if (err) {
+                        console.log(err, err.stack);
+                        return cb(err) // an error occurred
+                    } else {
+                        return cb();
+                    } // successful response
+                });
+
+
+
+            } else {
+                // some other error
+                return cb(err)
+
+            }
+
+        } // an error occurred
+        else {
+            return cb(new Error("mkdir: cannot create directory  File exists"));
+        } // error response
+    });
+
+};
 
 var rmdir = function (bucket, path, cb) {
 
@@ -448,19 +510,19 @@ var lsBucket = function (bucket, pathPrefix, cb) {
  */
 
 
-var write = function (bucket, key, stream, options,cb) {
+var write = function (bucket, key, stream, options, cb) {
     var params = {
         Bucket: bucket,
         Key: key,
         Body: stream
     };
 
-	
-	
-    s3.upload(params,options).
+
+
+    s3.upload(params, options).
     on('httpUploadProgress', function (evt) {
-        
-		console.log(evt);
+
+        console.log(evt);
     }).
     send(function (error, response) {
 

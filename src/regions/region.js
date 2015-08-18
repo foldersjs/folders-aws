@@ -31,8 +31,8 @@ Region.prototype.configure = function (options) {
     }
 
     self.bucket = options.bucket;
-	self.partSize  = options.partSize;
-	self.queueSize = options.queueSize;
+    self.partSize = options.partSize;
+    self.queueSize = options.queueSize;
 
 };
 
@@ -130,7 +130,7 @@ Region.prototype.ls = function (service, path, cb) {
 
     self.serviceObj = getServiceObject(service, region, {
         bucket: self.bucket
-    })
+    });
     return self.serviceObj.ls(service, region, pathPrefix, cb);
 
 
@@ -182,7 +182,7 @@ var regionAsFolders = function (region, dir) {
 
     return data;
 
-}
+};
 
 
 Region.prototype.write = function (service, path, data, cb) {
@@ -198,9 +198,9 @@ Region.prototype.write = function (service, path, data, cb) {
 
     self.serviceObj = getServiceObject(service, region, {
         bucket: self.bucket,
-		partSize  :self.partSize,
-		queueSize : self.queueSize
-    })
+        partSize: self.partSize,
+        queueSize: self.queueSize
+    });
     return self.serviceObj.write(pathPrefix, data, cb);
 
 };
@@ -220,7 +220,7 @@ Region.prototype.cat = function (service, path, cb) {
 
     self.serviceObj = getServiceObject(service, region, {
         bucket: self.bucket
-    })
+    });
     return self.serviceObj.cat(pathPrefix, cb);
 
 
@@ -237,7 +237,7 @@ Region.prototype.unlink = function (service, path, cb) {
 
     self.serviceObj = getServiceObject(service, region, {
         bucket: self.bucket
-    })
+    });
     return self.serviceObj.unlink(pathPrefix, cb);
 
 
@@ -255,8 +255,25 @@ Region.prototype.rmdir = function (service, path, cb) {
 
     self.serviceObj = getServiceObject(service, region, {
         bucket: self.bucket
-    })
+    });
     return self.serviceObj.rmdir(pathPrefix, cb);
+
+
+};
+
+Region.prototype.mkdir = function (service, path, cb) {
+
+    var self = this,
+        region, pathPrefix, arr;
+    arr = getRegion(self, path);
+    region = arr[0];
+    pathPrefix = arr[1];
+
+
+    self.serviceObj = getServiceObject(service, region, {
+        bucket: self.bucket
+    });
+    return self.serviceObj.mkdir(pathPrefix, cb);
 
 
 };
