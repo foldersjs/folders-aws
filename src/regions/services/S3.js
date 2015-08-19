@@ -247,6 +247,7 @@ S3.prototype.cat = function (path, cb) {
     pathPrefix = arr[1];
     cat(bucket, pathPrefix, cb);
 
+
 };
 
 
@@ -304,6 +305,7 @@ S3.prototype.rmdir = function (path, cb) {
     bucket = arr[0];
     pathPrefix = arr[1];
 
+
     rmdir(bucket, pathPrefix, cb);
 
 };
@@ -334,20 +336,31 @@ var mkdir = function (bucket, path, cb) {
 
     };
 
+
+
+
     s3.headObject(params, function (err, data) {
         if (err) {
 
+
             if (err.code === 'NotFound') {
+
 
                 // object doesnot exist .We can create dir now 
 
 
+
+
                 s3.putObject(params, function (err, data) {
                     if (err) {
+
                         console.log(err, err.stack);
                         return cb(err) // an error occurred
                     } else {
                         return cb();
+
+
+
                     } // successful response
                 });
 
@@ -364,6 +377,9 @@ var mkdir = function (bucket, path, cb) {
             return cb(new Error("mkdir: cannot create directory  File exists"));
         } // error response
     });
+
+
+
 
 };
 
@@ -509,7 +525,6 @@ var lsBucket = function (bucket, pathPrefix, cb) {
  * to make it work
  */
 
-
 var write = function (bucket, key, stream, options, cb) {
     var params = {
         Bucket: bucket,
@@ -517,12 +532,20 @@ var write = function (bucket, key, stream, options, cb) {
         Body: stream
     };
 
-
-
     s3.upload(params, options).
     on('httpUploadProgress', function (evt) {
 
+
         console.log(evt);
+    }).
+    on('httpError', function (evt) {
+
+        console.log(evt);
+    }).
+    on('complete', function (evt) {
+
+        console.log(evt);
+
     }).
     send(function (error, response) {
 
@@ -537,6 +560,8 @@ var write = function (bucket, key, stream, options, cb) {
 
         return cb(null, "created success");
     });
+
+
 
 };
 
