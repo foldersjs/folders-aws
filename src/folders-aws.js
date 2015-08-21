@@ -1,8 +1,6 @@
 // Folders.io connector to AWS
 var AWS = require('aws-sdk');
 var path = require('path');
-var Config = require('../config');
-
 
 /*
  * AWS SDK - Recommends passing authentication in the environment:
@@ -25,25 +23,26 @@ var FoldersAws = function (prefix, options) {
 };
 
 FoldersAws.prototype.configure = function (options) {
-    var self = this;
-    /*
-     * load credentials from disk file 
-     */
-    if (Config.aws.loadFromPath) {
-        AWS.config.loadFromPath(Config.aws.loadFromPath);
-    } else if (Config.aws.accessKeyId && Config.aws.secretAccessKey) {
+    var self = this;   
+	var accessKeyIdEnv     = process.env.AWS_ACCESS_KEY_ID; 
+	var secretAccessKeyEnv = process.env.AWS_SECRET_ACCESS_KEY;	
+	
+    if (accessKeyIdEnv && secretAccessKeyEnv) {
 
         AWS.config.update({
-            accessKeyId: Config.aws.accessKeyId,
-            secretAccessKey: Config.aws.secretAccessKey
+
+
+            accessKeyId: accessKeyIdEnv,
+            secretAccessKey: secretAccessKeyEnv
         });
     }
+	
     /*
      * hard-code credentials inside an application. 
      * Use this method only for small personal 
      * scripts or for testing purposes.
      */
-    else if (options.accessKeyId && options.secretAccessKey) {
+     else if (options.accessKeyId && options.secretAccessKey) {
         AWS.config.update({
             accessKeyId: options.accessKeyId,
             secretAccessKey: options.secretAccessKey
@@ -73,11 +72,7 @@ FoldersAws.prototype.configure = function (options) {
 };
 
 
-
-
 module.exports = FoldersAws;
-
-
 
 var getService = function (self, path) {
 
@@ -102,9 +97,6 @@ var getRegionObject = function (options) {
  * If they pass an array of bucket names,
  *  then we'd use those as the root folder names
  */
-
-
-
 
 FoldersAws.prototype.features = FoldersAws.features = {
     cat: true,
@@ -182,9 +174,6 @@ FoldersAws.prototype.ls = function (path, cb) {
     });
 
     return self.regionObj.ls(service, pathPrefix, cb);
-
-
-
 
 };
 

@@ -19,21 +19,6 @@ Basic Usage
 ### Configuration
 In order to access aws services , you must provide credentials . There are 2 ways to provide them 
 
-#### Credentials from Disk
-Create  a json file named '/path/to/config.json' with the contents:
-
-```
-{ 
-  "accessKeyId": "your access key id", 
-  "secretAccessKey": "your secret access key "
-}
-
-```
-Edit config.js and specify the path of this json file at around line 7
-
-```
-Config.aws.loadFromPath = '/path/to/config.json' ;
-```
 #### Credentials from Environment Variables
 You can set environment variables to provide sdk credentials . 
 This means that if you properly set your environment variables, 
@@ -122,5 +107,56 @@ aws.write('s3/us-west-2/mybcuket1/video/some_movie.mp4',writeData, function(err,
 });
 ```
 
+### unlink
+
+```js
+
+/**
+ * @param path, string, the path 
+ * @param cb, the callback function
+ * unlink(path,cb)
+ */
+
+aws.unlink('/path1/path2/some_movie.mp4', function(err) {
+        
+		if (err){
+			console.log("Got error ",err);
+		}
+});
+```
+
+### rmdir
+
+```js
+
+/**
+ * @param path, string, the path 
+ * @param cb, the callback function
+ * rmdir(path,cb)
+ */
+
+aws.rmdir('/path1/path2/', function(err) {
+        
+		if (err){
+			console.log("Got error ",err);
+		}
+});
+
+### mkdir
+
+```js
+
+/**
+ * @param path, string, the path 
+ * @param cb, the callback function
+ * mkdir(path,cb)
+ */
+
+aws.mkdir('/path1/path2/', function(err) {
+        
+		if (err){
+			console.log("Got error ",err);
+		}
+});
 
 'service' , 'region' and 'bucket' attributes  in 'config' can be 'String' or 'Array' or 'Optional (undefined)'. 
