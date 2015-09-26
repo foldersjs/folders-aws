@@ -12,6 +12,19 @@ var S3 = function (aws, service, options) {
 
 };
 
+S3.dataVolume = function () {
+
+    return {
+        RXOK: S3.RXOK,
+        TXOK: S3.TXOK
+    };
+
+}
+
+
+
+S3.TXOK = 0;
+S3.RXOK = 0;
 
 S3.prototype.configure = function (options) {
 
@@ -327,6 +340,8 @@ S3.prototype.mkdir = function (path, cb) {
 
 };
 
+
+
 var mkdir = function (bucket, path, cb) {
     var params = {
         Bucket: bucket,
@@ -527,16 +542,21 @@ var lsBucket = function (bucket, pathPrefix, cb) {
 
 var write = function (bucket, key, stream, options, cb) {
     var params = {
-        Bucket: bucket,
-        Key: key,
-        Body: stream
-    };
+            Bucket: bucket,
+            Key: key,
+            Body: stream
+        },
+        loaded = 0;
+
 
     s3.upload(params, options).
     on('httpUploadProgress', function (evt) {
 
+        S3.RXOK += evt.loaded - loaded;
+        loaded = evt.loaded;
 
         console.log(evt);
+
     }).
     on('httpError', function (evt) {
 
@@ -556,8 +576,6 @@ var write = function (bucket, key, stream, options, cb) {
             return cb(error, null);
 
         }
-
-
         return cb(null, "created success");
     });
 
@@ -575,6 +593,7 @@ var cat = function (bucket, key, cb) {
     };
 
 
+
     s3.headObject(params, function (err, data) {
         if (err) {
             console.log(err, err.stack);
@@ -588,7 +607,6 @@ var cat = function (bucket, key, cb) {
 
 
             var file = s3.getObject(params).createReadStream();
-
             cb(null, {
                 stream: file,
                 size: data.ContentLength,

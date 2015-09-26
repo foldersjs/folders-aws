@@ -1,5 +1,6 @@
 // Folders.io connector to AWS
 var AWS = require('aws-sdk');
+var Region = require('./regions/region.js');
 var path = require('path');
 
 /*
@@ -16,17 +17,23 @@ var ALL_SERVICES = ['S3', 'EC2'];
 
 var FoldersAws = function (prefix, options) {
 
-    this.configure(options);
+    this.options = options || {};
+    this.configure(this.options);
     this.prefix = prefix || "/http_window.io_0:aws/";
     console.log("inin foldersAws,", this.bucket || 'All Buckets');
 
 };
 
+FoldersAws.dataVolume = function () {
+
+    return Region.dataVolume();
+};
+
 FoldersAws.prototype.configure = function (options) {
-    var self = this;   
-	var accessKeyIdEnv     = process.env.AWS_ACCESS_KEY_ID; 
-	var secretAccessKeyEnv = process.env.AWS_SECRET_ACCESS_KEY;	
-	
+    var self = this;
+    var accessKeyIdEnv = process.env.AWS_ACCESS_KEY_ID;
+    var secretAccessKeyEnv = process.env.AWS_SECRET_ACCESS_KEY;
+
     if (accessKeyIdEnv && secretAccessKeyEnv) {
 
         AWS.config.update({
@@ -36,13 +43,13 @@ FoldersAws.prototype.configure = function (options) {
             secretAccessKey: secretAccessKeyEnv
         });
     }
-	
+
     /*
      * hard-code credentials inside an application. 
      * Use this method only for small personal 
      * scripts or for testing purposes.
      */
-     else if (options.accessKeyId && options.secretAccessKey) {
+    else if (options.accessKeyId && options.secretAccessKey) {
         AWS.config.update({
             accessKeyId: options.accessKeyId,
             secretAccessKey: options.secretAccessKey
@@ -88,8 +95,8 @@ var getService = function (self, path) {
 
 var getRegionObject = function (options) {
 
-    var s = require('./regions/region.js');
-    return new s(AWS, options);
+
+    return new Region(AWS, options);
 };
 
 
@@ -337,4 +344,10 @@ FoldersAws.prototype.mkdir = function (path, cb) {
         bucket: self.bucket
     });
     return self.regionObj.mkdir(service, pathPrefix, cb);
+};
+
+FoldersAws.prototype.dump = function () {
+
+    return this.options;
+
 };

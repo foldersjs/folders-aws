@@ -16,6 +16,11 @@ var Region = function (aws, options) {
 
 };
 
+Region.dataVolume = function () {
+
+    return S3.dataVolume();
+};
+
 Region.prototype.configure = function (options) {
     var self = this;
     if (typeof options.region == 'string') {
