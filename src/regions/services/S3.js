@@ -605,8 +605,16 @@ var cat = function (bucket, key, cb) {
             // FIXME: See if we can get some info on the remote file, esp. length.
             // headObject / listObjects  works well enough usually.
 
-
-            var file = s3.getObject(params).createReadStream();
+			var f = s3.getObject(params);
+			
+            var file = f.createReadStream();
+			
+			f.on('httpDone',function(d){
+			
+				S3.TXOK += parseInt(d.httpResponse.headers['content-length']);
+				
+			});
+            
             cb(null, {
                 stream: file,
                 size: data.ContentLength,
