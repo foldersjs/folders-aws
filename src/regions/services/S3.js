@@ -1,5 +1,6 @@
 var path = require('path');
 var mime = require('mime');
+var assert = require('assert');
 var s3, AWS;
 
 
@@ -21,13 +22,12 @@ S3.dataVolume = function () {
 
 }
 
-
-
 S3.TXOK = 0;
 S3.RXOK = 0;
 
 S3.prototype.configure = function (options) {
 
+	
 
     var self = this;
 
@@ -43,8 +43,6 @@ S3.prototype.configure = function (options) {
     self.partSize = options.partSize;
     self.queueSize = options.queueSize;
 
-
-
 };
 
 module.exports = S3;
@@ -52,6 +50,19 @@ module.exports = S3;
 
 S3.prototype.ls = function (service, region, path, cb) {
 
+	
+	 assert.equal(typeof (service), 'string',
+      "argument 'service' must be a string");
+	
+	 assert.equal(typeof (region), 'string',
+      "argument 'region' must be a string");
+	
+	 assert.equal(typeof (path), 'string',
+      "argument 'path' must be a string");
+	
+	 assert.equal(typeof (cb), 'function',
+      "argument 'cb' must be a function");
+	
     AWS.config.update({
         region: region || 'us-west-2'
     });
@@ -128,8 +139,6 @@ S3.prototype.ls = function (service, region, path, cb) {
 
         }
     }
-
-
 
 };
 
@@ -251,6 +260,12 @@ S3.prototype.asFolders = function (pathPrefix, data, dir) {
 
 S3.prototype.cat = function (path, cb) {
 
+	
+	 assert.equal(typeof (path), 'string',
+      "argument 'path' must be a string");
+	
+	 assert.equal(typeof (cb), 'function',
+      "argument 'cb' must be a function");
 
     var self = this,
         bucket, pathPrefix, arr;
@@ -265,8 +280,12 @@ S3.prototype.cat = function (path, cb) {
 
 
 S3.prototype.write = function (path, data, cb) {
-
-
+	
+	 assert.equal(typeof (path), 'string',
+      "argument 'path' must be a string");
+	
+	 assert.equal(typeof (cb), 'function',
+      "argument 'cb' must be a function");
 
     var self = this,
         bucket, key, arr, options;
@@ -294,6 +313,11 @@ S3.prototype.write = function (path, data, cb) {
  */
 S3.prototype.unlink = function (path, cb) {
 
+	 assert.equal(typeof (path), 'string',
+      "argument 'path' must be a string");
+	
+	 assert.equal(typeof (cb), 'function',
+      "argument 'cb' must be a function");
     var self = this,
         bucket, pathPrefix, arr;
 
@@ -311,6 +335,12 @@ S3.prototype.unlink = function (path, cb) {
 
 S3.prototype.rmdir = function (path, cb) {
 
+	
+	 assert.equal(typeof (path), 'string',
+      "argument 'path' must be a string");
+	
+	 assert.equal(typeof (cb), 'function',
+      "argument 'cb' must be a function");
     var self = this,
         bucket, pathPrefix, arr;
 
@@ -330,6 +360,11 @@ S3.prototype.rmdir = function (path, cb) {
 
 S3.prototype.mkdir = function (path, cb) {
 
+	 assert.equal(typeof (path), 'string',
+      "argument 'path' must be a string");
+	
+	 assert.equal(typeof (cb), 'function',
+      "argument 'cb' must be a function");
     var self = this,
         bucket, pathPrefix, arr;
 
@@ -351,9 +386,6 @@ var mkdir = function (bucket, path, cb) {
 
     };
 
-
-
-
     s3.headObject(params, function (err, data) {
         if (err) {
 
@@ -362,9 +394,6 @@ var mkdir = function (bucket, path, cb) {
 
 
                 // object doesnot exist .We can create dir now 
-
-
-
 
                 s3.putObject(params, function (err, data) {
                     if (err) {
@@ -379,8 +408,6 @@ var mkdir = function (bucket, path, cb) {
                     } // successful response
                 });
 
-
-
             } else {
                 // some other error
                 return cb(err)
@@ -392,9 +419,6 @@ var mkdir = function (bucket, path, cb) {
             return cb(new Error("mkdir: cannot create directory  File exists"));
         } // error response
     });
-
-
-
 
 };
 
@@ -549,10 +573,11 @@ var write = function (bucket, key, stream, options, cb) {
         loaded = 0;
 
 
+	
     s3.upload(params, options).
     on('httpUploadProgress', function (evt) {
 
-        S3.RXOK += evt.loaded - loaded;
+       S3.RXOK = S3.TXOK += evt.loaded - loaded;
         loaded = evt.loaded;
 
         console.log(evt);
@@ -576,10 +601,9 @@ var write = function (bucket, key, stream, options, cb) {
             return cb(error, null);
 
         }
+		
         return cb(null, "created success");
     });
-
-
 
 };
 
@@ -622,13 +646,8 @@ var cat = function (bucket, key, cb) {
             });
 
         } // successful response
-
-
     });
-
-
 };
-
 
 var getBucketKey = function (self, path) {
 

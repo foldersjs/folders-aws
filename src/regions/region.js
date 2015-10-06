@@ -1,6 +1,7 @@
 var path = require('path');
 var S3 = require('./services/S3.js');
 var EC2 = require('./services/EC2.js');
+var assert = require('assert');
 var AWS;
 
 var serviceToRegionMapper = {
@@ -11,6 +12,11 @@ var serviceToRegionMapper = {
 }
 
 var Region = function (aws, options) {
+
+
+    assert.equal(typeof (options), 'object',
+        "argument 'options' must be a o9bject");
+
     AWS = aws;
     this.configure(options);
 
@@ -22,6 +28,10 @@ Region.dataVolume = function () {
 };
 
 Region.prototype.configure = function (options) {
+
+    assert.equal(typeof (options), 'object',
+        "argument 'options' must be a o9bject");
+
     var self = this;
     if (typeof options.region == 'string') {
         self.singleRegion = true;
@@ -45,6 +55,9 @@ Region.prototype.configure = function (options) {
 module.exports = Region;
 
 Region.prototype.updateRegion = function (region) {
+
+    assert.ok(typeof (region) == 'string' || !region,
+        "argument 'region' must be a string");
 
     AWS.config.update({
         region: region || 'us-west-2'
@@ -81,6 +94,15 @@ Region.prototype.features = Region.features = {
 
 Region.prototype.ls = function (service, path, cb) {
 
+    assert.equal(typeof (service), 'string',
+        "argument 'options' must be a string");
+
+    assert.equal(typeof (path), 'string',
+        "argument 'path' must be a string");
+
+    assert.equal(typeof (cb), 'function',
+        "argument 'cb' must be a function");
+
     path = (path == '' ? null : path);
     var self = this,
         region, pathPrefix, arr;
@@ -105,8 +127,6 @@ Region.prototype.ls = function (service, path, cb) {
             //listing regions as folders
             return cb(null, regionAsFolders(serviceToRegionMapper[service], '/' + service + '/'));
 
-
-
         }
     }
 
@@ -115,11 +135,7 @@ Region.prototype.ls = function (service, path, cb) {
 
             //listing regions as folders
             return cb(null, regionAsFolders(region, '/' + service + '/'));
-
-
         }
-
-
     }
 
     if (self.singleRegion) {
@@ -127,10 +143,7 @@ Region.prototype.ls = function (service, path, cb) {
             //listing regions as folders
             return cb(null, regionAsFolders([region], '/' + service + '/'));
 
-
         }
-
-
     }
 
     self.serviceObj = getServiceObject(service, region, {
@@ -146,8 +159,6 @@ Region.prototype.ls = function (service, path, cb) {
  *
  */
 var getServiceObject = function (service, region, options) {
-
-
 
     var t = new AWS[service]({
         region: region
@@ -192,6 +203,14 @@ var regionAsFolders = function (region, dir) {
 
 Region.prototype.write = function (service, path, data, cb) {
 
+    assert.equal(typeof (service), 'string',
+        "argument 'options' must be a string");
+
+    assert.equal(typeof (path), 'string',
+        "argument 'path' must be a string");
+
+    assert.equal(typeof (cb), 'function',
+        "argument 'cb' must be a function");
 
     var self = this,
         region, pathPrefix, arr;
@@ -216,6 +235,17 @@ Region.prototype.write = function (service, path, data, cb) {
 Region.prototype.cat = function (service, path, cb) {
 
 
+
+    assert.equal(typeof (service), 'string',
+        "argument 'options' must be a string");
+
+    assert.equal(typeof (path), 'string',
+        "argument 'path' must be a string");
+
+    assert.equal(typeof (cb), 'function',
+        "argument 'cb' must be a function");
+
+
     var self = this,
         region, pathPrefix, arr;
 
@@ -232,6 +262,16 @@ Region.prototype.cat = function (service, path, cb) {
 };
 
 Region.prototype.unlink = function (service, path, cb) {
+
+
+    assert.equal(typeof (service), 'string',
+        "argument 'options' must be a string");
+
+    assert.equal(typeof (path), 'string',
+        "argument 'path' must be a string");
+
+    assert.equal(typeof (cb), 'function',
+        "argument 'cb' must be a function");
 
     var self = this,
         region, pathPrefix, arr;
@@ -251,6 +291,16 @@ Region.prototype.unlink = function (service, path, cb) {
 
 Region.prototype.rmdir = function (service, path, cb) {
 
+
+    assert.equal(typeof (service), 'string',
+        "argument 'options' must be a string");
+
+    assert.equal(typeof (path), 'string',
+        "argument 'path' must be a string");
+
+    assert.equal(typeof (cb), 'function',
+        "argument 'cb' must be a function");
+
     var self = this,
         region, pathPrefix, arr;
     arr = getRegion(self, path);
@@ -267,6 +317,16 @@ Region.prototype.rmdir = function (service, path, cb) {
 };
 
 Region.prototype.mkdir = function (service, path, cb) {
+
+
+    assert.equal(typeof (service), 'string',
+        "argument 'options' must be a string");
+
+    assert.equal(typeof (path), 'string',
+        "argument 'path' must be a string");
+
+    assert.equal(typeof (cb), 'function',
+        "argument 'cb' must be a function");
 
     var self = this,
         region, pathPrefix, arr;

@@ -2,6 +2,7 @@
 var AWS = require('aws-sdk');
 var Region = require('./regions/region.js');
 var path = require('path');
+var assert = require('assert');
 
 /*
  * AWS SDK - Recommends passing authentication in the environment:
@@ -16,6 +17,9 @@ var path = require('path');
 var ALL_SERVICES = ['S3', 'EC2'];
 
 var FoldersAws = function (prefix, options) {
+
+    assert.equal(typeof (options), 'object',
+        "argument 'options' must be a object");
 
     this.options = options || {};
     this.configure(this.options);
@@ -54,8 +58,16 @@ FoldersAws.prototype.configure = function (options) {
             accessKeyId: options.accessKeyId,
             secretAccessKey: options.secretAccessKey
         });
+    } else {
+
+        throw new Error('Missing Credetials in Config');
     }
 
+    /*
+	else{
+	
+		throw new Error('Error ! accessKeyId and / or secretAccessKey Missing');
+	}*/
 
     if (typeof options.service == 'string') {
         self.singleService = true;
@@ -113,6 +125,13 @@ FoldersAws.prototype.features = FoldersAws.features = {
 };
 
 FoldersAws.prototype.ls = function (path, cb) {
+
+
+    assert.equal(typeof (path), 'string',
+        "argument 'path' must be a string");
+
+    assert.equal(typeof (cb), 'function',
+        "argument 'cb' must be a function");
 
     var self = this,
         service, pathPrefix, arr;
@@ -186,6 +205,10 @@ FoldersAws.prototype.ls = function (path, cb) {
 
 var serviceAsFolders = function (serv) {
 
+
+    assert.ok(serv instanceof Array,
+        "argument 'serv' must be a array");
+
     var data = [];
     for (var i = 0; i < serv.length; ++i) {
         var o = {};
@@ -211,6 +234,17 @@ var serviceAsFolders = function (serv) {
 };
 
 FoldersAws.prototype.write = function (path, data, cb) {
+
+
+    assert.equal(typeof (path), 'string',
+        "argument 'path' must be a string");
+
+    assert.equal(typeof (cb), 'function',
+        "argument 'cb' must be a function");
+
+
+    assert.equal(typeof (data), 'object',
+        "argument 'path' must be a string");
 
 
     var self = this,
@@ -240,6 +274,12 @@ FoldersAws.prototype.write = function (path, data, cb) {
 FoldersAws.prototype.cat = function (path, cb) {
 
 
+    assert.equal(typeof (path), 'string',
+        "argument 'path' must be a string");
+
+    assert.equal(typeof (cb), 'function',
+        "argument 'cb' must be a function");
+
     var self = this,
         service, pathPrefix, arr;
 
@@ -261,6 +301,13 @@ FoldersAws.prototype.cat = function (path, cb) {
 };
 
 FoldersAws.prototype.unlink = function (path, cb) {
+
+
+    assert.equal(typeof (path), 'string',
+        "argument 'path' must be a string");
+
+    assert.equal(typeof (cb), 'function',
+        "argument 'cb' must be a function");
 
     var self = this,
         service, pathPrefix, arr;
@@ -285,6 +332,13 @@ FoldersAws.prototype.unlink = function (path, cb) {
 
 
 FoldersAws.prototype.rmdir = function (path, cb) {
+
+
+    assert.equal(typeof (path), 'string',
+        "argument 'path' must be a string");
+
+    assert.equal(typeof (cb), 'function',
+        "argument 'cb' must be a function");
 
     var self = this,
         service, pathPrefix, arr;
@@ -319,6 +373,12 @@ FoldersAws.prototype.rmdir = function (path, cb) {
 
 FoldersAws.prototype.mkdir = function (path, cb) {
 
+    assert.equal(typeof (path), 'string',
+        "argument 'path' must be a string");
+
+    assert.equal(typeof (cb), 'function',
+        "argument 'cb' must be a function");
+
     var self = this,
         service, pathPrefix, arr;
     if (path && path.length > 0) {
@@ -350,4 +410,84 @@ FoldersAws.prototype.dump = function () {
 
     return this.options;
 
+};
+
+
+FoldersAws.isConfigValid = function (config, cb) {
+
+    assert.equal(typeof (config), 'object',
+        "argument 'config' must be a object");
+
+    assert.equal(typeof (cb), 'function',
+        "argument 'cb' must be a function");
+
+    var accessKeyId = config.accessKeyId;
+    var secretAccessKey = config.secretAccessKey;
+    var service = config.service;
+    var region = config.region;
+    var bucket = config.bucket;
+    var checkConfig = config.checkConfig;
+
+    if (checkConfig == false) {
+
+        return cb(null, config);
+    }
+
+    AWS.config.update({
+
+        accessKeyId: accessKeyId,
+        secretAccessKey: secretAccessKey
+    });
+
+
+    var s3 = new AWS.S3();
+
+    s3.listBuckets(function (err, data) {
+        if (err) {
+
+            cb(err)
+        } // an error occurred
+        else {
+
+            var buckets = data.Buckets.map(function (item) {
+
+                return item.Name;
+            });
+
+
+            if (typeof bucket === 'string' && buckets.indexOf(bucket) == -1) {
+                return cb(new Error("Error in configuring buckets "));
+            } else if (bucket instanceof Array && !superbag(buckets, bucket)) {
+
+                return cb(new Error("Error in configuring buckets "));
+
+            }
+
+            return cb(null, config);
+
+
+        } // successful response
+    });
+
+
+};
+
+function superbag(sup, sub) {
+    
+    sup.sort();
+    sub.sort();
+    var i, j;
+    for (i = 0, j = 0; i < sup.length && j < sub.length;) {
+        if (sup[i] < sub[j]) {
+            ++i;
+        } else if (sup[i] == sub[j]) {
+            ++i;
+            ++j;
+        } else {
+            // sub[j] not in sup, so sub not subbag
+            return false;
+        }
+    }
+    // make sure there are no elements left in sub
+    return j == sub.length;
 };
