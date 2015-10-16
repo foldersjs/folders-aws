@@ -426,7 +426,7 @@ FoldersAws.isConfigValid = function (config, cb) {
     var service = config.service;
     var region = config.region;
     var bucket = config.bucket;
-    var checkConfig = config.checkConfig;
+	var checkConfig = config.checkConfig;
 
     if (checkConfig == false) {
 
@@ -439,55 +439,48 @@ FoldersAws.isConfigValid = function (config, cb) {
         secretAccessKey: secretAccessKey
     });
 
-
     var s3 = new AWS.S3();
 
-    s3.listBuckets(function (err, data) {
-        if (err) {
+    if (!bucket) {
+		// just for checking access credentials validity if no bucket is provided
+        bucket = new Array('test');
 
-            cb(err)
-        } // an error occurred
-        else {
+    } else if (typeof bucket == 'string') {
 
-            var buckets = data.Buckets.map(function (item) {
-
-                return item.Name;
-            });
+        bucket = new Array(bucket);
+    }
 
 
-            if (typeof bucket === 'string' && buckets.indexOf(bucket) == -1) {
-                return cb(new Error("Error in configuring buckets "));
-            } else if (bucket instanceof Array && !superbag(buckets, bucket)) {
+    var isValid = true;
+    var bucketsChecked = 0;
 
-                return cb(new Error("Error in configuring buckets "));
+    for (var i = 0; i < bucket.length; ++i) {
 
+        var params = {
+            Bucket: bucket[i] /* required */
+        };
+
+        s3.getBucketLocation(params, function (err, data) {
+            bucketsChecked++;
+
+
+            if (err) {
+                if (err.code == 'SignatureDoesNotMatch' || params.Bucket != 'test')
+                    isValid = false;
             }
 
-            return cb(null, config);
+            if (bucketsChecked == bucket.length) {
 
+                if (!isValid) {
+                    return cb(new Error("Error in configuring buckets "));
+                } else {
 
-        } // successful response
-    });
+                    return cb(null, config);
+                }
+            }
 
+        });
 
-};
-
-function superbag(sup, sub) {
-    
-    sup.sort();
-    sub.sort();
-    var i, j;
-    for (i = 0, j = 0; i < sup.length && j < sub.length;) {
-        if (sup[i] < sub[j]) {
-            ++i;
-        } else if (sup[i] == sub[j]) {
-            ++i;
-            ++j;
-        } else {
-            // sub[j] not in sup, so sub not subbag
-            return false;
-        }
     }
-    // make sure there are no elements left in sub
-    return j == sub.length;
+
 };
