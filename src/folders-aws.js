@@ -460,12 +460,14 @@ FoldersAws.isConfigValid = function (config, cb) {
             Bucket: bucket[i] /* required */
         };
 
-        s3.getBucketLocation(params, function (err, data) {
+        s3.getBucketAcl(params, function (err, data) {
             bucketsChecked++;
 
 
+            
             if (err) {
-                if (err.code == 'SignatureDoesNotMatch' || params.Bucket != 'test')
+				console.log(err);
+                if (err.code == 'SignatureDoesNotMatch' || err.code == 'InvalidAccessKeyId' || params.Bucket != 'test')
                     isValid = false;
             }
 
