@@ -424,7 +424,7 @@ FoldersAws.isConfigValid = function (config, cb) {
     var accessKeyId = config.accessKeyId;
     var secretAccessKey = config.secretAccessKey;
     var service = config.service;
-    var region = config.region;
+    var region = config.region || 'us-east-1';
     var bucket = config.bucket;
 	var checkConfig = config.checkConfig;
 
@@ -439,7 +439,7 @@ FoldersAws.isConfigValid = function (config, cb) {
         secretAccessKey: secretAccessKey
     });
 
-    var s3 = new AWS.S3();
+    var s3 = new AWS.S3({region:region});
 
     if (!bucket) {
 		// just for checking access credentials validity if no bucket is provided

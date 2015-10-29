@@ -632,12 +632,6 @@ var cat = function (bucket, key, cb) {
 			var f = s3.getObject(params);
 			
             var file = f.createReadStream();
-			
-			f.on('httpDone',function(d){
-			
-				S3.TXOK += parseInt(d.httpResponse.headers['content-length']);
-				
-			});
             
             cb(null, {
                 stream: file,
