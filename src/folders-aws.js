@@ -17,7 +17,7 @@ var assert = require('assert');
 var ALL_SERVICES = ['S3', 'EC2'];
 
 var FoldersAws = function (prefix, options) {
-
+	console.log('fwww')
     assert.equal(typeof (options), 'object',
         "argument 'options' must be a object");
 
@@ -34,6 +34,7 @@ FoldersAws.dataVolume = function () {
 };
 
 FoldersAws.prototype.configure = function (options) {
+	
     var self = this;
     var accessKeyIdEnv = process.env.AWS_ACCESS_KEY_ID;
     var secretAccessKeyEnv = process.env.AWS_SECRET_ACCESS_KEY;
@@ -63,6 +64,20 @@ FoldersAws.prototype.configure = function (options) {
         throw new Error('Missing Credetials in Config');
     }
 
+	if (options.endpoint){
+		AWS.config.update({
+            endpoint: options.endpoint
+ 		});
+		
+	}
+	
+	if (options.s3ForcePathStyle){
+	
+		AWS.config.update({
+            s3ForcePathStyle: options.s3ForcePathStyle
+ 		});
+		
+	}
     /*
 	else{
 	
