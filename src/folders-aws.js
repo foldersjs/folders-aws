@@ -151,9 +151,9 @@ FoldersAws.prototype.ls = function (path, cb) {
     var self = this,
         service, pathPrefix, arr;
 
-    if (path && path.length > 0) {
-        if (path[path.length - 1] != '/') path += '/';
-    }
+    //if (path && path.length > 0) {
+    //    if (path[path.length - 1] != '/') path += '/';
+    //}
 
     path = (path == '/' ? null : path.slice(1));
 
